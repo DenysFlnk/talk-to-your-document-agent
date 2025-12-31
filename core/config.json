@@ -1,0 +1,28 @@
+{
+  "routes": {},
+  "applications": {},
+  "models": {
+    "mamaylm": {
+      "displayName": "MamayLM",
+      "endpoint": "http://adapter-dial-openai:5000/openai/deployments/mamaylm/chat/completions",
+      "type": "chat",
+      "upstreams": [
+        {
+          "endpoint": "http://host.docker.internal:11434/v1/chat/completions",
+          "key": "some_api_key"
+        }
+      ]
+    }
+  },
+  "keys": {
+    "dial_api_key": {
+      "project": "talk_to_your_report_project",
+      "role": "default"
+    }
+  },
+  "roles": {
+    "default": {
+      "limits": {}
+    }
+  }
+}
