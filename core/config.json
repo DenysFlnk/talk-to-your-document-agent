@@ -1,22 +1,27 @@
 {
   "routes": {},
-  "applications": {},
+  "applications": {
+    "talk-to-your-document-agent": {
+      "displayName": "Talk To Your Document Agent",
+      "description": "Agent which can analyze, calculate and visualize data in document(s). Supported formats: xlsx, docx.",
+      "endpoint": "http://host.docker.internal:5030/openai/deployments/talk-to-your-document-agent/chat/completions",
+      "inputAttachmentTypes": [
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+      ],
+      "forwardAuthToken": true
+    }
+  },
   "models": {
     "mamaylm": {
       "displayName": "MamayLM",
-      "endpoint": "http://adapter-dial-openai:5000/openai/deployments/mamaylm/chat/completions",
-      "type": "chat",
-      "upstreams": [
-        {
-          "endpoint": "http://host.docker.internal:11434/v1/chat/completions",
-          "key": "some_api_key"
-        }
-      ]
+      "endpoint": "http://mamay-lm:11434/v1/chat/completions",
+      "type": "chat"
     }
   },
   "keys": {
     "dial_api_key": {
-      "project": "talk_to_your_report_project",
+      "project": "talk_to_your_document_agent_project",
       "role": "default"
     }
   },
