@@ -4,10 +4,13 @@ from typing import Any
 from aidial_sdk.chat_completion import Message, Role
 
 from agent.utils.constants import CUSTOM_CONTENT, TOOL_CALL_HISTORY_KEY
+from agent.utils.dial_file_content_extractor import DialFileContentExtractor
 
 
 def unpack_messages(
-    messages: list[Message], state_history: list[dict[str, Any]]
+    messages: list[Message],
+    state_history: list[dict[str, Any]],
+    content_extractor: DialFileContentExtractor,
 ) -> list[dict[str, Any]]:
     result: list[dict[str, Any]] = []
     for message in messages:
@@ -34,18 +37,22 @@ def unpack_messages(
                     msg.custom_content = None
                     result.append(msg.dict(exclude_none=True))
         else:
-            attachments_urls_content = ""
+            attachments_content = ""
+
             if message.custom_content and message.custom_content.attachments:
-                attachments_urls_content = "\n\nAttached files URLs:\n"
+                attachments_content = "\n\n Контент файлів:\n"
+
                 for attachment in message.custom_content.attachments:
-                    if attachment.url:
-                        attachments_urls_content += f"{attachment.url}\n"
-                    elif attachment.reference_url:
-                        attachments_urls_content += f"{attachment.reference_url}\n"
+                    file_url = (
+                        attachment.url if attachment.url else attachment.reference_url
+                    )
+                    text_content = content_extractor.extract_text(file_url)
+                    attachments_content += f"{text_content}\n\n"
 
             content = message.content or ""
-            if attachments_urls_content:
-                content += attachments_urls_content
+
+            if attachments_content:
+                content += attachments_content
 
             result.append({"role": message.role, "content": content})
 

@@ -7,6 +7,14 @@ from aidial_sdk.chat_completion import ChatCompletion, Request, Response
 from agent.agent import TalkToYourDocumentAgent
 from agent.prompts import SYSTEM_PROMPT
 from agent.tools.base import BaseTool
+from agent.tools.mcp.mcp_client import MCPClient
+from agent.tools.mcp.mcp_tool import MCPTool
+from agent.tools.py_interpreter.python_code_interpreter_tool import (
+    PythonCodeInterpreterTool,
+)
+
+DIAL_ENDPOINT = os.getenv("DIAL_ENDPOINT", "http://localhost:8080")
+AGENT_DEPLOYMENT_NAME = os.getenv("DEPLOYMENT_NAME", "qwen/qwen3-8b")
 
 
 class TalkToYourDocumentAgentApplication(ChatCompletion):
@@ -15,7 +23,23 @@ class TalkToYourDocumentAgentApplication(ChatCompletion):
 
     async def _create_tools(self) -> list[BaseTool]:
         tools: list[BaseTool] = []
-        # TODO: add tools
+
+        interpreter_tool = await PythonCodeInterpreterTool.create(
+            mcp_url="http://localhost:8050/mcp",
+            tool_name="execute_code",
+            dial_endpoint=DIAL_ENDPOINT,
+        )
+        tools.append(interpreter_tool)
+
+        calc_client = await MCPClient.create_stdio(
+            command="docker", args=["run", "--rm", "-i", "calculator-mcp"]
+        )
+
+        mcp_tools = await calc_client.get_tools()
+
+        for tool in mcp_tools:
+            tools.append(MCPTool(client=calc_client, mcp_tool_model=tool))
+
         return tools
 
     async def chat_completion(self, request: Request, response: Response) -> None:
@@ -24,12 +48,13 @@ class TalkToYourDocumentAgentApplication(ChatCompletion):
 
         with response.create_single_choice() as choice:
             agent = TalkToYourDocumentAgent(
-                endpoint=os.getenv("DIAL_ENDPOINT", "http://localhost:8080"),
+                endpoint=DIAL_ENDPOINT,
                 system_prompt=SYSTEM_PROMPT,
                 tools=self.tools,
             )
+
             await agent.handle_request(
-                deployment_name=os.getenv("DEPLOYMENT_NAME", "mamaylm"),
+                deployment_name=AGENT_DEPLOYMENT_NAME,
                 choice=choice,
                 request=request,
                 response=response,

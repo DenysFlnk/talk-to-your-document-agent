@@ -14,6 +14,8 @@ services:
       - themes
       - core
     environment:
+      IS_IFRAME: true
+      ALLOWED_IFRAME_ORIGINS: "http://localhost:5173,http://127.0.0.1:5173"
       NEXTAUTH_SECRET: "secret"
       THEMES_CONFIG_HOST: "http://themes:8080"
       DIAL_API_HOST: "http://core:8080"
@@ -28,7 +30,7 @@ services:
     container_name: fp-agent-redis
     restart: always
     ports:
-      - "6379:6379"
+      - "6381:6379"
     command: >
       redis-server
       --maxmemory 2000mb
@@ -62,20 +64,13 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway"
 
-  mamay-lm:
-    image: mamaylm-4b-q4-k-m-ollama:local
-    container_name: fp-agent-mamay-lm
-    volumes:
-      - ollama_data:/root/.ollama
+  python-interpreter:
+    image: khshanovskyi/python-code-interpreter-mcp-server:latest
+    container_name: fp-agent-python-interpreter
     ports:
-      - "11434:11434"
-    # deploy:
-    #   resources:
-    #     reservations:
-    #       devices:
-    #         - driver: nvidia
-    #           count: all
-    #           capabilities: [gpu]
-
-volumes:
-  ollama_data:
+      - "8050:8000"
+    environment:
+      LOG_LEVEL: "INFO"
+    restart: unless-stopped
+    mem_limit: 2G
+    cpus: 2.0

@@ -17,6 +17,8 @@ from openai.types.chat.chat_completion_chunk import ChoiceDeltaToolCall
 from agent.tools.base import BaseTool
 from agent.tools.models import ToolCallParams
 from agent.utils.constants import TOOL_CALL_HISTORY_KEY
+from agent.utils.dial_file_content_extractor import DialFileContentExtractor
+from agent.utils.file_content_cache import FileContentCache
 from agent.utils.history import unpack_messages
 from agent.utils.stage import StageProcessor
 
@@ -33,10 +35,20 @@ class TalkToYourDocumentAgent:
         self.tools = tools
         self.tools_dict = {tool.name: tool for tool in tools}
         self.state = {TOOL_CALL_HISTORY_KEY: []}
+        self.file_content_extractor = None
+        self.cache = FileContentCache.create()
 
     async def handle_request(
-        self, deployment_name: str, choice: Choice, request: Request, response: Response
+        self,
+        deployment_name: str,
+        choice: Choice,
+        request: Request,
+        response: Response,
     ) -> Message:
+        self.file_content_extractor = DialFileContentExtractor(
+            self.endpoint, request.api_key, self.cache
+        )
+
         dial = AsyncDial(
             base_url=self.endpoint,
             api_key=request.api_key,
@@ -44,7 +56,9 @@ class TalkToYourDocumentAgent:
         )
 
         chunks: AsyncIterable[ChatCompletionChunk] = await dial.chat.completions.create(
-            messages=self._prepare_messages(request.messages),
+            messages=self._prepare_messages(
+                request.messages, self.state[TOOL_CALL_HISTORY_KEY], self.system_prompt
+            ),
             tools=[tool.schema for tool in self.tools],
             deployment_name=deployment_name,
             stream=True,
@@ -103,25 +117,16 @@ class TalkToYourDocumentAgent:
             )
             self.state[TOOL_CALL_HISTORY_KEY].extend(tool_messages)
 
-            return await self.handle_request(deployment_name, choice, request, response)
+            return await self.handle_request(
+                deployment_name,
+                choice,
+                request,
+                response,
+            )
 
         choice.set_state(self.state)
 
         return assistant_message
-
-    def _prepare_messages(self, messages: list[Message]) -> list[dict[str, Any]]:
-        unpacked_msgs = unpack_messages(
-            messages=messages, state_history=self.state[TOOL_CALL_HISTORY_KEY]
-        )
-        unpacked_msgs.insert(
-            0, {"role": Role.SYSTEM.value, "content": self.system_prompt}
-        )
-
-        print("Message history 📚️:")
-        for msg in unpacked_msgs:
-            print(json.dumps(msg, indent=4))
-
-        return unpacked_msgs
 
     async def _process_tool_call(
         self, tool_call: ToolCall, choice: Choice, api_key: str, conversation_id: str
@@ -152,3 +157,19 @@ class TalkToYourDocumentAgent:
         StageProcessor.close_stage_safely(stage)
 
         return message.dict(exclude_none=True)
+
+    def _prepare_messages(
+        self, messages: list[Message], tool_history, system_prompt
+    ) -> list[dict[str, Any]]:
+        unpacked_msgs = unpack_messages(
+            messages=messages,
+            state_history=tool_history,
+            content_extractor=self.file_content_extractor,
+        )
+        unpacked_msgs.insert(0, {"role": Role.SYSTEM.value, "content": system_prompt})
+
+        print("Message history 📚️:")
+        for msg in unpacked_msgs:
+            print(json.dumps(msg, indent=4, ensure_ascii=False))
+
+        return unpacked_msgs
