@@ -32,12 +32,14 @@
 
 **talk-to-your-document-agent**
 
-This is AI assistant which analize documents. The core features include:
+An AI assistant for analyzing and querying documents. Self-hosted, privacy-conscious, and designed for seamless interaction with your documents in Ukrainian. 
+The core features include:
 
-- Full Ukrainian language support with self-hosted LLM
+- Full Ukrainian language support with a self-hosted large language model (LLM)
 - Supported document formats: docx, xlsx
-- Performs summarization, search, statistics calculation based on provided documents and user request
+- Core capabilities: summarization, targeted search, and statistics extraction based on provided documents and user prompts
 - UI with reports and chat
+- Local-first, privacy-preserving workflow: no cloud dependency unless you opt in
 
 ---
 
