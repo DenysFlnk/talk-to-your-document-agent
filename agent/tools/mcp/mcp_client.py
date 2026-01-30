@@ -2,6 +2,7 @@ from typing import Any, Optional
 
 from mcp import ClientSession, ListToolsResult, StdioServerParameters
 from mcp.client.stdio import stdio_client
+from mcp.client.streamable_http import streamablehttp_client
 from mcp.types import (
     BlobResourceContents,
     CallToolResult,
@@ -33,6 +34,20 @@ class MCPClient:
         instance = cls(stdio_params=stdio_params)
         await instance.connect_stdio()
         return instance
+
+    async def connect(self):
+        """Connect to MCP server"""
+        if self.session:
+            return
+
+        self._streams_context = streamablehttp_client(self.server_url)
+        read_stream, write_stream, _ = await self._streams_context.__aenter__()
+
+        self._session_context = ClientSession(read_stream, write_stream)
+        self.session: ClientSession = await self._session_context.__aenter__()
+
+        init_result = await self.session.initialize()
+        print(init_result.model_dump_json(indent=2))
 
     async def connect_stdio(self):
         """Connect to stdio-based MCP server"""
