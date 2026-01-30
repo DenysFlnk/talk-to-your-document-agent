@@ -2,13 +2,10 @@
 
 <div align="center">
 
-<img src="readmeai/assets/logos/purple.svg" width="30%" style="position: relative; top: 0; right: 0;" alt="Project Logo"/>
-
 # TALK-TO-YOUR-DOCUMENT-AGENT
 
 <em>Empower your documents with AI conversation assistance.</em>
 
-<img src="https://img.shields.io/github/license/DenysFlnk/talk-to-your-document-agent?style=default&logo=opensourceinitiative&logoColor=white&color=0080ff" alt="license">
 <img src="https://img.shields.io/github/last-commit/DenysFlnk/talk-to-your-document-agent?style=default&logo=git&logoColor=white&color=0080ff" alt="last-commit">
 <img src="https://img.shields.io/github/languages/top/DenysFlnk/talk-to-your-document-agent?style=default&color=0080ff" alt="repo-top-language">
 <img src="https://img.shields.io/github/languages/count/DenysFlnk/talk-to-your-document-agent?style=default&color=0080ff" alt="repo-language-count">
