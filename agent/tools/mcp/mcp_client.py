@@ -28,15 +28,22 @@ class MCPClient:
         self._session_context = None
 
     @classmethod
+    async def create_http(cls, mcp_server_url: str) -> "MCPClient":
+        """Async factory method to create and connect MCPClient via HTTP"""
+        instance = cls(mcp_server_url)
+        await instance.connect()
+        return instance
+
+    @classmethod
     async def create_stdio(cls, command: str, args: list[str]) -> "MCPClient":
-        """Create stdio-based MCP client (for Docker calculator)"""
+        """Create stdio-based MCP client"""
         stdio_params = StdioServerParameters(command=command, args=args)
         instance = cls(stdio_params=stdio_params)
         await instance.connect_stdio()
         return instance
 
     async def connect(self):
-        """Connect to MCP server"""
+        """Connect to http-based MCP server"""
         if self.session:
             return
 

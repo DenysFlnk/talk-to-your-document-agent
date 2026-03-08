@@ -74,3 +74,13 @@ services:
     restart: unless-stopped
     mem_limit: 2G
     cpus: 2.0
+
+  calculator:
+    image: calculator-mcp:latest
+    container_name: fp-agent-calculator-mcp
+    ports:
+      - "8888:8888"
+    environment:
+      "USE_HTTP": "true"
+      "HTTP_PORT": "8888"
+    restart: unless-stopped

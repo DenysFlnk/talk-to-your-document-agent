@@ -31,8 +31,8 @@ class TalkToYourDocumentAgentApplication(ChatCompletion):
         )
         tools.append(interpreter_tool)
 
-        calc_client = await MCPClient.create_stdio(
-            command="docker", args=["run", "--rm", "-i", "calculator-mcp"]
+        calc_client = await MCPClient.create_http(
+            mcp_server_url="http://localhost:8888/mcp"
         )
 
         mcp_tools = await calc_client.get_tools()
